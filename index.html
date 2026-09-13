@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎭 Конструктор сценариев мероприятий</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+  input, textarea, select, .result-text {
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
+  }
+  @media print {
+    body * { display: none !important; }
+    body::after {
+      content: '⛔ Печать и сохранение данного конструктора запрещены.';
+      display: block !important;
+      font-size: 24px;
+      text-align: center;
+      padding: 100px 20px;
+      color: #333;
+    }
+  }
+  body {
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+    min-height: 100vh;
+    padding: 20px;
+    color: #2d3748;
+  }
+  .container {
+    max-width: 920px;
+    margin: 0 auto;
+    background: rgba(255,255,255,0.97);
+    border-radius: 24px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    overflow: hidden;
+  }
+  header {
+    background: linear-gradient(135deg, #ff6b6b, #feca57);
+    padding: 30px;
+    text-align: center;
+    color: white;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+  }
+  header h1 { font-size: 2em; margin-bottom: 8px; }
+  header p { font-size: 1.05em; opacity: 0.95; }
+  .form-section { padding: 30px; }
+  .field {
+    margin-bottom: 22px;
+    background: #f7fafc;
+    padding: 18px 20px;
+    border-radius: 14px;
+    border-left: 5px solid #667eea;
+    transition: transform 0.2s, box-shadow 0.2s, opacity 0.3s, max-height 0.4s;
+    overflow: hidden;
+  }
+  .field:hover {
+    transform: translateX(4px);
+    box-shadow: 0 4px 12px rgba(102,126,234,0.15);
+  }
+  .field.hidden {
+    max-height: 0;
+    padding: 0 20px;
+    margin-bottom: 0;
+    opacity: 0;
+    border-left-width: 0;
+    pointer-events: none;
+  }
+  .field.audience-field { border-left-color: #f56565; }
+  .field.age-field { border-left-color: #48bb78; }
+  label.field-label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #4a5568;
+    font-size: 1.02em;
+  }
+  label.field-label .emoji { margin-right: 6px; font-size: 1.2em; }
+  select, input[type="text"], textarea {
+    width: 100%;
+    padding: 11px 14px;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    font-size: 15px;
+    background: white;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    font-family: inherit;
+  }
+  select:focus, input:focus, textarea:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102,126,234,0.15);
+  }
+  textarea { resize: vertical; min-height: 70px; }
+  .custom-input {
+    display: none;
+    margin-top: 10px;
+    border-color: #feca57 !important;
+    background: #fffff0 !important;
+    animation: slideDown 0.25s ease;
+  }
+  .custom-input.visible { display: block; }
+  @keyframes slideDown {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .custom-hint {
+    display: none;
+    font-size: 12px;
+    color: #d69e2e;
+    margin-top: 4px;
+    font-style: italic;
+  }
+  .custom-hint.visible { display: block; }
+  .checkbox-group {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 8px;
+    margin-top: 6px;
+  }
+  .checkbox-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    background: white;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 14px;
+  }
+  .checkbox-item:hover { border-color: #667eea; background: #f0f4ff; }
+  .checkbox-item input { margin-right: 8px; cursor: pointer; }
+  .checkbox-item.checked {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border-color: transparent;
+  }
+  .btn {
+    width: 100%;
+    padding: 16px;
+    background: linear-gradient(135deg, #ff6b6b, #feca57);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 1.15em;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 10px;
+  }
+  .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(255,107,107,0.4);
+  }
+  .btn:active { transform: translateY(0); }
+  .result {
+    display: none;
+    margin-top: 25px;
+    background: linear-gradient(135deg, #f6f9fc, #edf2f7);
+    border-radius: 14px;
+    padding: 25px;
+    border: 2px dashed #667eea;
+    animation: fadeIn 0.4s;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .result h3 { color: #667eea; margin-bottom: 12px; font-size: 1.2em; }
+  .result-text {
+    background: white;
+    padding: 18px;
+    border-radius: 10px;
+    white-space: pre-wrap;
+    line-height: 1.6;
+    font-size: 14px;
+    max-height: 400px;
+    overflow-y: auto;
+    border: 1px solid #e2e8f0;
+  }
+  .copy-btn {
+    margin-top: 12px;
+    padding: 10px 20px;
+    background: #48bb78;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background 0.2s;
+  }
+  .copy-btn:hover { background: #38a169; }
+  .hint {
+    font-size: 12px;
+    color: #718096;
+    margin-top: 6px;
+    font-style: italic;
+  }
+  .audience-tag {
+    display: inline-block;
+    padding: 3px 10px;
+    background: #fed7d7;
+    color: #c53030;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-left: 8px;
+    vertical-align: middle;
+  }
+  footer {
+    text-align: center;
+    padding: 20px;
+    color: #718096;
+    font-size: 13px;
+    background: #f7fafc;
+  }
+  .block-toast {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-100px);
+    background: linear-gradient(135deg, #e53e3e, #c53030);
+    color: white;
+    padding: 14px 28px;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 14px;
+    box-shadow: 0 8px 25px rgba(229,62,62,0.4);
+    z-index: 99999;
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    pointer-events: none;
+  }
+  .block-toast.show { transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body oncontextmenu="return false" ondragstart="return false">
+
+<div class="block-toast" id="blockToast">⛔ Это действие заблокировано</div>
+
+<div class="container">
+  <header>
+    <h1>🎭 Конструктор сценариев мероприятий</h1>
+    <p>Для детей, родителей, учителей и смешанных аудиторий ✨</p>
+  </header>
+
+  <div class="form-section">
+
+    <!-- 1. Тип события -->
+    <div class="field">
+      <label class="field-label"><span class="emoji">🎪</span>Тип события</label>
+      <select id="eventType" onchange="toggleCustom(this,'eventTypeCustom','eventTypeHint')">
+        <option value="">— Выберите тип —</option>
+        <optgroup label="🏫 Общешкольные">
+          <option>Торжественная линейка</option>
+          <option>День знаний (1 Сентября)</option>
+          <option>Последний звонок</option>
+          <option>Выпускной (9 класс)</option>
+          <option>Выпускной (11 класс)</option>
+          <option>Посвящение в первоклассники</option>
+          <option>Посвящение в пятиклассники</option>
+          <option>Прощание с начальной школой</option>
+          <option>День рождения школы / Юбилей</option>
+          <option>Школьный концерт / Отчёт</option>
+        </optgroup>
+        <optgroup label="📚 Учебные и тематические">
+          <option>Классный час</option>
+          <option>День учителя</option>
+          <option>День Победы (9 Мая)</option>
+          <option>День России (12 Июня)</option>
+          <option>День народного единства</option>
+          <option>День науки / Техно-фестиваль</option>
+          <option>Экологический день</option>
+          <option>День космонавтики</option>
+          <option>День толерантности</option>
+        </optgroup>
+        <optgroup label="🎉 Праздники и традиции">
+          <option>Новый год</option>
+          <option>Рождество / Святки</option>
+          <option>Масленица</option>
+          <option>Осенний бал / Ярмарка</option>
+          <option>8 Марта</option>
+          <option>23 Февраля</option>
+          <option>День смеха (1 Апреля)</option>
+          <option>День матери</option>
+          <option>День отца</option>
+        </optgroup>
+        <optgroup label="👨‍👩‍👧 Семейные и родительские">
+          <option>Семейный праздник</option>
+          <option>Родительское собрание-праздник</option>
+          <option>Мастер-класс для родителей</option>
+          <option>Семейный квест / Тимбилдинг</option>
+          <option>День семьи</option>
+        </optgroup>
+        <optgroup label="👔 Для учителей и педсостава">
+          <option>Педсовет-тимбилдинг</option>
+          <option>Учительский корпоратив / Новый год для педсостава</option>
+          <option>День учителя (для учителей)</option>
+          <option>Методическое объединение-праздник</option>
+          <option>Педагогическая мастерская</option>
+        </optgroup>
+        <optgroup label="🏆 Официальные и масштабные">
+          <option>Межрайонный слёт / Форум</option>
+          <option>Педагогическая конференция</option>
+          <option>Фестиваль / Смотр-конкурс</option>
+          <option>Торжественная церемония награждения</option>
+          <option>Нетворкинг-встреча</option>
+          <option>Деловая игра / Стратегическая сессия</option>
+        </optgroup>
+        <option value="__custom__">✏️ Свой вариант…</option>
+      </select>
+      <input type="text" class="custom-input" id="eventTypeCustom" placeholder="Например: «Вечер поэзии», «Открытие музея школы»…">
+      <div class="custom-hint" id="eventTypeHint">Введите название вашего события</div>
+    </div>
+
+    <!-- 2. Целевая аудитория (НОВОЕ) -->
+    <div class="field audience-field">
+      <label class="field-label">
+        <span class="emoji">👥</span>Целевая аудитория
+        <span class="audience-tag">КЛЮЧЕВОЕ ПОЛЕ</span>
+      </label>
+      <select id="audience" onchange="handleAudienceChange()">
+        <option value="">— Для кого мероприятие? —</option>
+        <optgroup label="👶 Только дети">
+          <option>Только ученики (дети / подростки)</option>
+          <option>Разновозрастная группа детей (без взрослых)</option>
+        </optgroup>
+        <optgroup label="👨‍👩‍👧 Только взрослые">
+          <option>Только родители</option>
+          <option>Только учителя / педсостав</option>
+          <option>Только официальные гости / делегации</option>
+        </optgroup>
+        <optgroup label="🤝 Смешанные аудитории">
+          <option>Дети + родители (семейный формат)</option>
+          <option>Дети + учителя (внутришкольное)</option>
+          <option>Дети + учителя + родители (общешкольное)</option>
+          <option>Дети + учителя + родители + гости / делегации</option>
+          <option>Учителя + родители</option>
+          <option>Учителя + гости (педсовет, методобъединение)</option>
+          <option>Школьники + педагоги + приглашённые (слёт, форум)</option>
+        </optgroup>
+        <option value="__custom__">✏️ Свой вариант…</option>
+      </select>
+      <input type="text" class="custom-input" id="audienceCustom" placeholder="Например: «Ветераны педтруда + молодые специалисты»…">
+      <div class="custom-hint" id="audienceHint">Уточните состав участников</div>
+    </div>
+
+    <!-- 3. Уточнение состава (условное) -->
+    <div class="field hidden" id="compositionField">
+      <label class="field-label"><span class="emoji">🔍</span>Уточнение состава (необязательно)</label>
+      <textarea id="composition" placeholder="Например: «Около 150 человек: 80 школьников 5–9 кл., 40 учителей, 20 родителей, 10 почётных гостей из администрации района. Почётные гости — с приветственным словом и награждением.»"></textarea>
+      <div class="hint">Укажите примерное количество, роли, кто будет с приветственным словом / награждением</div>
+    </div>
+
+    <!-- 4. Возраст (условное — только если есть дети) -->
+    <div class="field age-field" id="ageField">
+      <label class="field-label"><span class="emoji">🎓</span>Возраст / класс детей</label>
+      <select id="age" onchange="toggleCustom(this,'ageCustom','ageHint')">
+        <option value="">— Выберите возраст —</option>
+        <option>1–2 класс (6–8 лет)</option>
+        <option>3–4 класс (8–10 лет)</option>
+        <option>5–6 класс (10–12 лет)</option>
+        <option>7–8 класс (12–14 лет)</option>
+        <option>9 класс (14–15 лет)</option>
+        <option>10–11 класс (15–17 лет)</option>
+        <option>Смешанные классы (начальная + средняя)</option>
+        <option>Разновозрастная группа детей</option>
+        <option>Детский сад (подготовительная)</option>
+        <option value="__custom__">✏️ Свой вариант…</option>
+      </select>
+      <input type="text" class="custom-input" id="ageCustom" placeholder="Например: «Коррекционный класс», «ГПД 2–4 кл.»…">
+      <div class="custom-hint" id="ageHint">Укажите возраст или особенности группы</div>
+    </div>
+
+    <!-- 5. Формат -->
+    <div class="field">
+      <label class="field-label"><span class="emoji">🎨</span>Формат / атмосфера</label>
+      <select id="format" onchange="toggleCustom(this,'formatCustom','formatHint')">
+        <option value="">— Выберите формат —</option>
+        <optgroup label="🎭 Классические">
+          <option>Традиционный (торжественный)</option>
+          <option>Интерактивный (с вовлечением зала)</option>
+          <option>Игровой (командные соревнования)</option>
+          <option>Мюзикл / Музыкальный спектакль</option>
+          <option>Шоу талантов</option>
+          <option>Кукольный театр</option>
+        </optgroup>
+        <optgroup label="🎬 Современные">
+          <option>Квест / Приключение</option>
+          <option>Детектив / Расследование</option>
+          <option>ТВ-шоу (формат популярного шоу)</option>
+          <option>Стендап / Юмористический вечер</option>
+          <option>Современный (с мемами и трендами)</option>
+          <option>«Форт Боярд» (станции с испытаниями)</option>
+          <option>«Импровизация»</option>
+        </optgroup>
+        <optgroup label="🧠 Интеллектуальные">
+          <option>Интеллектуальное шоу (квиз)</option>
+          <option>Дебаты / Дискуссионный клуб</option>
+          <option>TED-формат (короткие выступления)</option>
+          <option>Киновечер с обсуждением</option>
+          <option>Баркемп / Неформальная встреча</option>
+        </optgroup>
+        <optgroup label="💼 Для взрослых / официальные">
+          <option>Тимбилдинг (сплочение коллектива)</option>
+          <option>Воркшоп / Мастер-майнд</option>
+          <option>Круглый стол</option>
+          <option>Панельная дискуссия</option>
+          <option>Торжественная церемония</option>
+          <option>Гала-вечер</option>
+          <option>Деловая игра / Стратсессия</option>
+          <option>Нетворкинг-сессия</option>
+          <option>Коучинг-встреча</option>
+        </optgroup>
+        <option value="__custom__">✏️ Свой вариант…</option>
+      </select>
+      <input type="text" class="custom-input" id="formatCustom" placeholder="Например: «Подкаст в прямом эфире», «Судебное заседание»…">
+      <div class="custom-hint" id="formatHint">Опишите свой формат</div>
+    </div>
+
+    <!-- 6. Тайминг -->
+    <div class="field">
+      <label class="field-label"><span class="emoji">⏱️</span>Тайминг</label>
+      <select id="timing" onchange="toggleCustom(this,'timingCustom','timingHint')">
+        <option value="">— Выберите длительность —</option>
+        <option>15 минут (мини-пятиминутка)</option>
+        <option>20 минут (короткий блок)</option>
+        <option>30 минут (оптимально для младших)</option>
+        <option>40–45 минут (один урок)</option>
+        <option>60 минут (часовой блок)</option>
+        <option>90 минут (два урока / мероприятие)</option>
+        <option>2 часа (большое событие)</option>
+        <option>3 часа (с перерывами / фуршетом)</option>
+        <option>Полдня (4–5 часов, с активностями)</option>
+        <option value="__custom__">✏️ Свой вариант…</option>
+      </select>
+      <input type="text" class="custom-input" id="timingCustom" placeholder="Например: «10 минут», «Весь день с обедом»…">
+      <div class="custom-hint" id="timingHint">Укажите свою длительность</div>
+    </div>
+
+    <!-- 7. Тема -->
+    <div class="field">
+      <label class="field-label"><span class="emoji">🎯</span>Тема / повод (если есть)</label>
+      <input type="text" id="theme" placeholder="Например: «Дружба», «Космос», «75 лет школе», «Профессия учителя»…">
+      <div class="hint">Можно оставить пустым — придумаем сами</div>
+    </div>
+
+    <!-- 8. Доп. элементы -->
+    <div class="field">
+      <label class="field-label"><span class="emoji">✨</span>Дополнительные элементы (выберите несколько)</label>
+      <div class="checkbox-group" id="extras">
+        <label class="checkbox-item"><input type="checkbox" value="Песни и караоке"> 🎤 Песни</label>
+        <label class="checkbox-item"><input type="checkbox" value="Танцы и флешмоб"> 💃 Танцы</label>
+        <label class="checkbox-item"><input type="checkbox" value="Участие родителей"> 👨‍👩‍👧 Родители</label>
+        <label class="checkbox-item"><input type="checkbox" value="Видеоролик или презентация"> 🎬 Видео</label>
+        <label class="checkbox-item"><input type="checkbox" value="Флешмоб в финале"> 🎉 Флешмоб</label>
+        <label class="checkbox-item"><input type="checkbox" value="Чаепитие / угощения"> 🍪 Чаепитие</label>
+        <label class="checkbox-item"><input type="checkbox" value="Фуршет / банкет"> 🥂 Фуршет</label>
+        <label class="checkbox-item"><input type="checkbox" value="Сувениры / памятные подарки"> 🎁 Сувениры</label>
+        <label class="checkbox-item"><input type="checkbox" value="Грамоты и награждение"> 🏆 Награждение</label>
+        <label class="checkbox-item"><input type="checkbox" value="Приветственное слово VIP-гостей"> 🎙️ VIP-гости</label>
+        <label class="checkbox-item"><input type="checkbox" value="Конкурсы с призами"> 🎲 Конкурсы</label>
+        <label class="checkbox-item"><input type="checkbox" value="Сюрприз-момент"> 🎊 Сюрприз</label>
+        <label class="checkbox-item"><input type="checkbox" value="Совместное фото"> 📸 Фотозона</label>
+        <label class="checkbox-item"><input type="checkbox" value="Мастер-класс"> 🎨 Мастер-класс</label>
+        <label class="checkbox-item"><input type="checkbox" value="Выход гостей в костюмах"> 🎭 Костюмы</label>
+        <label class="checkbox-item"><input type="checkbox" value="Работа с QR-кодами"> 📱 QR-коды</label>
+        <label class="checkbox-item"><input type="checkbox" value="Благотворительный элемент"> ❤️ Благотворительность</label>
+        <label class="checkbox-item"><input type="checkbox" value="Протокольная часть (речи, грамоты)"> 📜 Протокол</label>
+        <label class="checkbox-item"><input type="checkbox" value="Нетворкинг-активности"> 🤝 Нетворкинг</label>
+      </div>
+    </div>
+
+    <!-- 9. Пожелания -->
+    <div class="field">
+      <label class="field-label"><span class="emoji">💬</span>Особые пожелания (необязательно)</label>
+      <textarea id="wishes" placeholder="Например: «Обязательно упомянуть юбилей района», «Хотим без пафоса», «Чтобы гости чувствовали себя вовлечёнными, а не просто зрителями»…"></textarea>
+    </div>
+
+    <button class="btn" onclick="generate()">🚀 Сгенерировать сценарий</button>
+
+    <div class="result" id="result">
+      <h3>📋 Готовый запрос для ИИ-помощника:</h3>
+      <div class="result-text" id="resultText"></div>
+      <button class="copy-btn" onclick="copyResult()">📎 Скопировать запрос</button>
+      <div class="hint">Скопируйте и отправьте этот запрос ИИ — получите полноценный сценарий!</div>
+    </div>
+  </div>
+
+  <footer>
+    Сделано с ❤️ для креативных учителей, вожатых и организаторов · 2026
+  </footer>
+</div>
+
+<script>
+/* ============================================================
+   «СВОЙ ВАРИАНТ»
+   ============================================================ */
+function toggleCustom(selectEl, inputId, hintId) {
+  const inp = document.getElementById(inputId);
+  const hint = document.getElementById(hintId);
+  if (selectEl.value === '__custom__') {
+    inp.classList.add('visible');
+    hint.classList.add('visible');
+    inp.focus();
+  } else {
+    inp.classList.remove('visible');
+    hint.classList.remove('visible');
+    inp.value = '';
+  }
+}
+
+function getSelectValue(selectId, customInputId) {
+  const sel = document.getElementById(selectId);
+  if (sel.value === '__custom__') {
+    const custom = document.getElementById(customInputId).value.trim();
+    return custom || '(не указано)';
+  }
+  return sel.value;
+}
+
+/* ============================================================
+   ЛОГИКА АУДИТОРИИ
+   ============================================================ */
+function handleAudienceChange() {
+  const sel = document.getElementById('audience');
+  const ageField = document.getElementById('ageField');
+  const compositionField = document.getElementById('compositionField');
+
+  // Обработка «Свой вариант»
+  const customInp = document.getElementById('audienceCustom');
+  const customHint = document.getElementById('audienceHint');
+  if (sel.value === '__custom__') {
+    customInp.classList.add('visible');
+    customHint.classList.add('visible');
+    customInp.focus();
+  } else {
+    customInp.classList.remove('visible');
+    customHint.classList.remove('visible');
+    customInp.value = '';
+  }
+
+  const val = sel.value;
+
+  // Показываем поле возраста, если в аудитории есть дети
+  const hasChildren =
+    val.includes('ученики') ||
+    val.includes('Дети +') ||
+    val.includes('Школьники +') ||
+    val.includes('Разновозрастная группа детей');
+
+  if (hasChildren) {
+    ageField.classList.remove('hidden');
+  } else {
+    ageField.classList.add('hidden');
+    document.getElementById('age').value = '';
+    document.getElementById('ageCustom').value = '';
+  }
+
+  // Показываем уточнение состава для смешанных аудиторий
+  const isMixed =
+    val.includes('+') ||
+    val.includes('гости') ||
+    val.includes('делегации') ||
+    val === '__custom__';
+
+  if (isMixed) {
+    compositionField.classList.remove('hidden');
+  } else {
+    compositionField.classList.add('hidden');
+    document.getElementById('composition').value = '';
+  }
+}
+
+/* ============================================================
+   ПОДСВЕТКА ЧЕКБОКСОВ
+   ============================================================ */
+document.querySelectorAll('.checkbox-item input').forEach(cb => {
+  cb.addEventListener('change', e => {
+    e.target.parentElement.classList.toggle('checked', e.target.checked);
+  });
+});
+
+/* ============================================================
+   ГЕНЕРАЦИЯ ПРОМПТА
+   ============================================================ */
+function generate() {
+  const eventType   = getSelectValue('eventType', 'eventTypeCustom');
+  const audience    = getSelectValue('audience', 'audienceCustom');
+  const composition = document.getElementById('composition').value.trim();
+  const age         = getSelectValue('age', 'ageCustom');
+  const format      = getSelectValue('format', 'formatCustom');
+  const timing      = getSelectValue('timing', 'timingCustom');
+  const theme       = document.getElementById('theme').value.trim();
+  const wishes      = document.getElementById('wishes').value.trim();
+  const extras      = Array.from(document.querySelectorAll('#extras input:checked')).map(c => c.value);
+
+  if (!eventType || eventType === '(не указано)' ||
+      !audience || audience === '(не указано)' ||
+      !format || format === '(не указано)' ||
+      !timing || timing === '(не указано)') {
+    alert('🙏 Пожалуйста, заполните все основные поля (тип события, аудитория, формат, тайминг)');
+    return;
+  }
+
+  // Определяем, есть ли дети в аудитории
+  const hasChildren =
+    audience.includes('ученики') ||
+    audience.includes('Дети +') ||
+    audience.includes('Школьники +') ||
+    audience.includes('Разновозрастная группа детей');
+
+  // Определяем тип аудитории для тональности
+  let audienceType = 'смешанная';
+  if (audience.includes('Только ученики') || audience.includes('Разновозрастная группа детей')) {
+    audienceType = 'детская';
+  } else if (audience.includes('Только родители')) {
+    audienceType = 'родительская';
+  } else if (audience.includes('Только учителя') || audience.includes('Только официальные')) {
+    audienceType = 'взрослая';
+  }
+
+  let prompt = `Ты — опытный, креативный школьный режиссер, сценарист и старший вожатый с отличным чувством юмора. Сгенерируй небанальный, живой и лёгкий в реализации сценарий мероприятия.
+
+📌 ВВОДНЫЕ ДАННЫЕ:
+• Тип события: ${eventType}
+• Целевая аудитория: ${audience}
+${composition ? `• Уточнение состава: ${composition}` : ''}
+${hasChildren && age && age !== '(не указано)' ? `• Возраст детей: ${age}` : ''}
+• Формат / атмосфера: ${format}
+• Тайминг: ${timing}
+${theme ? `• Тема / повод: ${theme}` : ''}
+${extras.length ? `• Дополнительные элементы: ${extras.join(', ')}` : ''}
+${wishes ? `• Особые пожелания: ${wishes}` : ''}
+
+👥 ОСОБЕННОСТИ АУДИТОРИИ (тип: ${audienceType}):
+— Учитывай возрастные, статусные и профессиональные особенности всех групп.
+— Если есть официальные гости / делегации — продумай их роль: приветственное слово, награждение, участие в активностях, фотозона.
+— Если аудитория смешанная — активности должны вовлекать ВСЕХ, а не только одну группу.
+— Если это педагоги — юмор профессиональный, без «детскости», с уважением к их опыту.
+— Если это родители — тон тёплый, семейный, уважительный.
+— Если это дети — живой язык, мемы, тренды, понятные школьникам.
+
+⚠️ ВАЖНЫЕ ТРЕБОВАНИЯ:
+— Избегай заезженных стихов из интернета, пафосных речей «ни о чём» и скучных лекций.
+— Сценарий должен быть динамичным, понятным аудитории и одобряемым администрацией (если это школьное мероприятие).
+— Интегрируй 2–3 современных тренда (мемы, форматы популярных шоу, TikTok-эстетику — если уместно для возраста и аудитории).
+— Если это масштабное событие (слёт, форум, конференция) — обязательно раздели на официальную и неформальную части.
+
+📝 СТРУКТУРА ОТВЕТА (строго по пунктам):
+
+1. КОНЦЕПЦИЯ И ФИШКА
+   Придумай яркую метафору / тему-обёртку.
+   Опиши 2–3 современных тренда, которые можно органично вплести.
+   Объясни, почему это зайдёт именно этой аудитории.
+
+2. ПЛАН ПОДГОТОВКИ (чек-лист для организатора)
+   Что нужно подготовить заранее: реквизит, музыкальные отбивки, оформление зала/сцены. Максимально просто и бюджетно.
+
+3. ТАЙМЛАЙН
+   Разбивка по минутам: Вступление → Основная часть → Активности → Финал.
+   Если есть официальная часть — выдели её отдельно.
+
+4. СЦЕНАРИЙ ПО РОЛЯМ
+   Распиши реплики ведущих живым языком, короткими фразами.
+   Обязательно вставляй технические маркеры:
+   [Включается динамичная музыка]
+   [Слайд на экране: ...]
+   [Интерактив с залом: ведущий задаёт вопрос...]
+   [Выход почётных гостей / награждение]
+   [Звук: ...]
+
+5. ИНТЕРАКТИВНЫЙ БЛОК / ИГРА
+   Подробно опиши 1–2 активности с участием аудитории.
+   Если аудитория смешанная — предложи активности, где взаимодействуют разные группы (дети + учителя, родители + дети и т.д.).
+   Правила — чётко и понятно.
+
+6. КРАСИВЫЙ ФИНАЛ
+   Мощная, вдохновляющая точка: рефлексия, традиция, совместное фото, памятный сувенир, общий танец / флешмоб.
+   Если есть VIP-гости — продумай их участие в финале.
+
+Сделай сценарий таким, чтобы аудитория сказала «Вау!», а организаторы — «Это реально провести!» 🎭`;
+
+  document.getElementById('resultText').textContent = prompt;
+  document.getElementById('result').style.display = 'block';
+  document.getElementById('result').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+/* ============================================================
+   КОПИРОВАНИЕ
+   ============================================================ */
+function copyResult() {
+  const text = document.getElementById('resultText').textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.querySelector('.copy-btn');
+    const original = btn.textContent;
+    btn.textContent = '✅ Скопировано!';
+    btn.style.background = '#38a169';
+    setTimeout(() => { btn.textContent = original; btn.style.background = '#48bb78'; }, 1800);
+  });
+}
+
+/* ============================================================
+   ЗАЩИТА
+   ============================================================ */
+const toast = document.getElementById('blockToast');
+let toastTimer;
+
+function showToast(msg) {
+  toast.textContent = msg || '⛔ Это действие заблокировано';
+  toast.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove('show'), 2200);
+}
+
+document.addEventListener('keydown', function(e) {
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+    e.preventDefault(); showToast('⛔ Сохранение страницы заблокировано'); return false;
+  }
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'u') {
+    e.preventDefault(); showToast('⛔ Просмотр исходного кода заблокирован'); return false;
+  }
+  if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'i') {
+    e.preventDefault(); showToast('⛔ Инструменты разработчика заблокированы'); return false;
+  }
+  if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'j') {
+    e.preventDefault(); showToast('⛔ Консоль заблокирована'); return false;
+  }
+  if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'c') {
+    e.preventDefault(); showToast('⛔ Инспектор элементов заблокирован'); return false;
+  }
+  if (e.key === 'F12') {
+    e.preventDefault(); showToast('⛔ Инструменты разработчика заблокированы'); return false;
+  }
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'p') {
+    e.preventDefault(); showToast('⛔ Печать заблокирована'); return false;
+  }
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'a') {
+    const tag = document.activeElement.tagName.toLowerCase();
+    if (tag !== 'input' && tag !== 'textarea') {
+      e.preventDefault(); showToast('⛔ Выделение текста заблокировано'); return false;
+    }
+  }
+});
+
+document.addEventListener('contextmenu', function(e) {
+  e.preventDefault(); showToast('⛔ Контекстное меню заблокировано'); return false;
+});
+
+document.addEventListener('dragstart', function(e) {
+  e.preventDefault(); return false;
+});
+
+document.addEventListener('drop', function(e) {
+  e.preventDefault(); return false;
+});
+</script>
+</body>
+</html>
